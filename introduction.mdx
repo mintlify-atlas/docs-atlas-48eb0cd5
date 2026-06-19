@@ -66,7 +66,7 @@ KaroCar Platform treats the entire car-services product as a single unit of depl
 
 - **Atomic changes** — a pull request can update the UI library and all consuming apps in one commit, eliminating version-skew bugs.
 - **Shared standards** — linting, formatting, and TypeScript rules are defined once at the package level, not duplicated in every app's config files.
-- **Incremental builds** — Turborepo's task graph and local (or [remote](development/remote-caching)) cache mean that only the apps and packages affected by a change are rebuilt, keeping CI times fast even as the codebase grows.
+- **Incremental builds** — Turborepo's task graph and local (or [remote](/development/remote-caching)) cache mean that only the apps and packages affected by a change are rebuilt, keeping CI times fast even as the codebase grows.
 - **Independent deployments** — despite living in the same repo, each Next.js app produces its own `.next` build artifact and can be deployed to its own Vercel project or container.
 
 <Tip>

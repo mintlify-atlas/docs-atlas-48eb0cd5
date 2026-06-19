@@ -1,5 +1,5 @@
 ---
-title: "@repo/eslint-config: Shared ESLint Configuration"
+title: "@repo/eslint-config: Shared ESLint Configuration Presets"
 sidebarTitle: "ESLint Config"
 description: "Shared ESLint configuration presets for all KaroCar Platform workspaces, covering TypeScript, Next.js, and React library environments."
 ---
@@ -95,7 +95,7 @@ Extends `base` and layers in React, React Hooks, and Next.js-specific rules. Use
 **Notable overrides:**
 
 - `react/react-in-jsx-scope` is turned **off** — not required with the modern JSX transform.
-- Browser and service-worker globals are included via the `globals` package.
+- Service-worker globals are included via the `globals` package (`globals.serviceworker`). Unlike `react-internal`, browser globals are not added here.
 
 **Usage:**
 

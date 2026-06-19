@@ -1,5 +1,5 @@
 ---
-title: "Building KaroCar Platform Apps and Packages"
+title: "Building KaroCar Platform Apps and Packages Locally"
 sidebarTitle: "Building"
 description: "Understand Turborepo's incremental build pipeline for KaroCar Platform — task graphs, output caching, filtered builds, and type checking."
 ---
@@ -110,10 +110,10 @@ You'll see one of these status indicators next to each task in the CLI output:
 
 ## Type Checking
 
-Type checking runs as a separate Turborepo task (`check-types`) so it can be parallelised across all workspaces independently of the build:
+Type checking is a separate step that runs via the root `check-types` script, parallelised across all workspaces independently of the build:
 
 ```bash
 pnpm check-types
 ```
 
-This invokes `turbo run check-types`, which runs `tsc --noEmit` in each workspace that defines a `check-types` script. Because type checking is a read-only analysis step, its results are also cached by Turborepo — unchanged packages won't re-run `tsc`.
+This invokes `turbo run check-types`, which runs `tsc --noEmit` in each workspace that defines a `check-types` script. Note that `check-types` is not declared in `turbo.json`'s `tasks` section — it is a root-level script that delegates to Turbo. Because type checking is a read-only analysis step, its results are cached by Turborepo — unchanged packages won't re-run `tsc`.

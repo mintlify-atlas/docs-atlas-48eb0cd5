@@ -111,7 +111,7 @@ In practice, when you run `pnpm build` from the repo root:
 4. Only once all package builds succeed does it start building the six apps,
    running them in parallel where no further dependencies exist.
 
-```
+```text
 packages/typescript-config (build) ─┐
 packages/eslint-config     (build) ─┤──► apps/* (build, in parallel)
 packages/ui                (build) ─┘

@@ -1,5 +1,5 @@
 ---
-title: "Set Up KaroCar Platform for Local Development"
+title: "KaroCar Platform Local Development Environment Setup"
 sidebarTitle: "Local Setup"
 description: "Get the full KaroCar Platform monorepo running on your machine — install dependencies, configure pnpm workspaces, and start all dev servers."
 ---
@@ -123,10 +123,9 @@ packages:
 ```
 
 <Note>
-  The `.npmrc` file at the repository root contains pnpm-specific configuration.
-  If you encounter unexpected peer-dependency warnings or hoisting behaviour,
-  check that file first — settings there control how pnpm resolves and hoists
-  node modules across the workspace.
+  The `.npmrc` file at the repository root is currently empty. pnpm's default
+  workspace resolution behaviour applies — `workspace:*` links are resolved
+  directly from the `packages/` directory without any additional configuration.
 </Note>
 
 ## Running a Single App

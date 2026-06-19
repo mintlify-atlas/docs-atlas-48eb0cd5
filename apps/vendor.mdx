@@ -1,7 +1,7 @@
 ---
-title: "KaroCar Vendor Dashboard Application"
+title: "KaroCar Vendor Dashboard: Provider Management Portal"
 sidebarTitle: "Vendor"
-description: "The dashboard for KaroCar service providers, enabling vendors to manage vehicle listings, availability, and orders using Next.js 16 and the shared @karo-car/ui library."
+description: "The dashboard for KaroCar service providers, enabling vendors to manage vehicle listings, availability, and orders using Next.js 16 and @karo-car/ui."
 ---
 
 The `vendor` app is the operational dashboard for car service providers and vendors on the KaroCar Platform. It gives vendors the tools to manage their vehicle listings, set availability windows, track incoming orders, and update pricing — all within a dedicated Next.js application. Like the `admin` app, the vendor dashboard consumes the shared `@karo-car/ui` component library, ensuring UI consistency across internal-facing surfaces. The homepage (`app/page.tsx`) renders the **Vendor Dashboard** heading as the authenticated landing page for service providers.
@@ -68,6 +68,11 @@ apps/vendor/
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.7",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

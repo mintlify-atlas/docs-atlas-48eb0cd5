@@ -1,7 +1,7 @@
 ---
-title: "Button Component — @karo-car/ui"
+title: "Button Component Reference — @karo-car/ui React Library"
 sidebarTitle: "Button"
-description: "Client-side React button component that fires an alert with the consuming app's name on click, exported from @karo-car/ui."
+description: "Client-side React button component that fires a browser alert with the consuming app's name on click. Marked \"use client\", exported from @karo-car/ui."
 ---
 
 The `Button` component is a client-side React button that displays an alert with the consuming app's name on click. It accepts a required `appName` prop to identify the calling application, making it easy to trace which app surfaced the interaction during development. Because it calls the browser's `alert` API, it is marked with the `"use client"` directive and must be rendered in a client component context.
@@ -27,7 +27,7 @@ interface ButtonProps {
 </ParamField>
 
 <ParamField body="appName" type="string" required>
-  The name of the application consuming the component. This value is interpolated into the alert message: `Hello from your {appName} app!`
+  The name of the application consuming the component. This value is interpolated into the alert message: `Hello from your ${appName} app!`
 </ParamField>
 
 ## Usage

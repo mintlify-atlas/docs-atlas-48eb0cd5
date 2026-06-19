@@ -1,5 +1,5 @@
 ---
-title: "Turborepo Remote Caching with Vercel"
+title: "Turborepo Remote Caching Setup for KaroCar Platform"
 sidebarTitle: "Remote Caching"
 description: "Speed up builds across machines and CI by connecting KaroCar Platform to Vercel's Remote Cache — share Turborepo artifacts team-wide in minutes."
 ---
@@ -121,7 +121,7 @@ The same hash algorithm is used locally and remotely, so a build that hits local
 
 When every task in a pipeline is restored from cache, Turborepo prints:
 
-```
+```text
 >>> FULL TURBO
 ```
 
@@ -161,7 +161,7 @@ Generate a `TURBO_TOKEN` in your [Vercel account settings](https://vercel.com/ac
   Do **not** commit the `.turbo/` directory to version control. It contains
   local cache metadata and authentication tokens. Add it to your `.gitignore`:
 
-  ```
+  ```text
   .turbo/
   ```
 </Warning>

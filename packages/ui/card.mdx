@@ -1,5 +1,5 @@
 ---
-title: "Card Component — @karo-car/ui"
+title: "Card Component Reference — @karo-car/ui React Library"
 sidebarTitle: "Card"
 description: "Anchor-based card component from @karo-car/ui that renders a title and children inside a styled link with automatic UTM tracking parameters."
 ---
@@ -84,5 +84,5 @@ export function Card({
 ```
 
 <Note>
-  The component automatically appends `?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo` to the `href` you provide. Do **not** include a query string in the `href` prop — the hardcoded UTM parameters will be concatenated directly after the base URL, which may produce a malformed URL if a `?` is already present.
+  The component automatically appends `?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo` to the `href` you provide. Do **not** include a query string in the `href` prop — the hardcoded UTM parameters will be concatenated directly after the base URL, which may produce a malformed URL if a `?` is already present. There is also a known bug in the source: the URL template literal ends with a stray double-quote character (`create-turbo"`), which appends a trailing `"` to every generated href.
 </Note>

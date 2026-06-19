@@ -1,5 +1,5 @@
 ---
-title: "Linting and Formatting in KaroCar Platform"
+title: "Linting and Formatting the KaroCar Platform Monorepo"
 sidebarTitle: "Linting"
 description: "How KaroCar Platform uses ESLint and Prettier across the monorepo — shared configs, Turbo env-var rules, and running checks in CI."
 ---
@@ -143,13 +143,13 @@ pnpm exec prettier --check "**/*.{ts,tsx,md}"
 
 ## Type Checking
 
-Type checking is a separate step from linting and runs via its own Turborepo task:
+Type checking is a separate step from linting and runs via the root `check-types` script:
 
 ```bash
 pnpm check-types
 ```
 
-This runs `turbo run check-types` across all workspaces, executing `tsc --noEmit` in each one. Because it's a distinct task, Turborepo caches its results independently — a workspace whose source files haven't changed won't re-run `tsc`.
+This runs `turbo run check-types` across all workspaces, executing `tsc --noEmit` in each workspace that defines that script. Note that `check-types` is not declared in `turbo.json`'s `tasks` section — it is driven by the root-level script. Turborepo still caches its results independently — a workspace whose source files haven't changed won't re-run `tsc`.
 
 ---
 
