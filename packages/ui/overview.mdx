@@ -1,0 +1,81 @@
+---
+title: "@karo-car/ui: Shared React Component Library"
+sidebarTitle: "Overview"
+description: "Shared React component library for KaroCar Platform, exporting Button, Card, and Code components consumed across admin and vendor apps."
+---
+
+`@karo-car/ui` is the shared React component library for KaroCar Platform. It exports three components — `Button`, `Card`, and `Code` — consumed by the admin and vendor apps via the `workspace:*` protocol. The package exposes its TypeScript source directly, so no separate build step is required for the UI package itself.
+
+## Installation
+
+Because `@karo-car/ui` is a private workspace package, consuming apps reference it through the monorepo's local package protocol rather than npm. Add it to the `dependencies` of any app inside the repository:
+
+```json
+"dependencies": {
+  "@karo-car/ui": "workspace:*"
+}
+```
+
+After updating `package.json`, run `pnpm install` from the repository root to link the package.
+
+## Importing components
+
+All three components are re-exported from the package entry point (`./src/index.ts`), so you can import everything from a single specifier:
+
+```typescript
+import { Button, Card, Code } from '@karo-car/ui';
+```
+
+## Package entry point
+
+The `package.json` exports map exposes the TypeScript source directly:
+
+```json
+{
+  "exports": { ".": "./src/index.ts" },
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}
+```
+
+This means consuming apps compile `@karo-car/ui` as part of their own TypeScript/Next.js build — there is no pre-compiled output to maintain or publish.
+
+## Components
+
+<CardGroup cols={3}>
+  <Card
+    title="Button"
+    icon="cursor-arrow-rays"
+    href="/packages/ui/button"
+  >
+    A client-side button that fires an alert identifying the calling app on click.
+  </Card>
+  <Card
+    title="Card"
+    icon="rectangle-stack"
+    href="/packages/ui/card"
+  >
+    An anchor-based card that appends UTM tracking parameters to the destination URL.
+  </Card>
+  <Card
+    title="Code"
+    icon="code-bracket"
+    href="/packages/ui/code"
+  >
+    A minimal semantic wrapper around the HTML `code` element for inline snippets.
+  </Card>
+</CardGroup>
+
+## Scaffolding new components
+
+The package ships a generator script powered by Turborepo's code-generation feature. Run the following command from the repository root to scaffold a new React component with the correct file structure:
+
+```bash
+turbo gen react-component
+```
+
+This invokes the `generate:component` script defined in `package.json` and places the new component alongside the existing ones in `packages/ui/src/`.
+
+<Note>
+  `@karo-car/ui` is marked `"private": true` in its `package.json` and is **not** published to the npm registry. It is strictly an internal workspace package shared between KaroCar Platform apps.
+</Note>

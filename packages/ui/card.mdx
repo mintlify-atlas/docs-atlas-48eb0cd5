@@ -1,0 +1,88 @@
+---
+title: "Card Component — @karo-car/ui"
+sidebarTitle: "Card"
+description: "Anchor-based card component from @karo-car/ui that renders a title and children inside a styled link with automatic UTM tracking parameters."
+---
+
+The `Card` component renders a styled anchor element linking to an external URL, automatically appending UTM tracking parameters sourced from `create-turbo`. It displays a title as a heading and accepts optional description children rendered as a paragraph below it. The link always opens in a new tab with `rel="noopener noreferrer"` for security.
+
+## Prop types
+
+The component uses inline prop types rather than a named interface:
+
+```typescript
+{
+  className?: string;
+  title: string;
+  children: React.ReactNode;
+  href: string;
+}
+```
+
+## Props
+
+<ParamField body="className" type="string">
+  One or more CSS class names applied to the outer `<a>` element for layout or visual styling.
+</ParamField>
+
+<ParamField body="title" type="string" required>
+  The card heading text, rendered inside an `<h2>` tag followed by a `→` arrow span.
+</ParamField>
+
+<ParamField body="children" type="React.ReactNode" required>
+  Descriptive content rendered in a `<p>` tag beneath the title. Typically a short sentence summarising the link destination.
+</ParamField>
+
+<ParamField body="href" type="string" required>
+  The destination URL. UTM tracking parameters (`utm_source`, `utm_medium`, `utm_campaign`) are appended automatically — you do not need to include them manually.
+</ParamField>
+
+## Usage
+
+```tsx
+import { Card } from '@karo-car/ui';
+
+export default function Page() {
+  return (
+    <Card title="Next.js Docs" href="https://nextjs.org/docs">
+      Learn about Next.js features and API.
+    </Card>
+  );
+}
+```
+
+## Source code
+
+```tsx
+import { type JSX } from "react";
+
+export function Card({
+  className,
+  title,
+  children,
+  href,
+}: {
+  className?: string;
+  title: string;
+  children: React.ReactNode;
+  href: string;
+}): JSX.Element {
+  return (
+    <a
+      className={className}
+      href={`${href}?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo"`}
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      <h2>
+        {title} <span>-&gt;</span>
+      </h2>
+      <p>{children}</p>
+    </a>
+  );
+}
+```
+
+<Note>
+  The component automatically appends `?utm_source=create-turbo&utm_medium=basic&utm_campaign=create-turbo` to the `href` you provide. Do **not** include a query string in the `href` prop — the hardcoded UTM parameters will be concatenated directly after the base URL, which may produce a malformed URL if a `?` is already present.
+</Note>

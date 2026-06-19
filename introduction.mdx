@@ -1,0 +1,92 @@
+---
+title: "KaroCar Platform: Turborepo Monorepo for Car Services"
+sidebarTitle: "Introduction"
+description: "KaroCar Platform is a Turborepo-powered monorepo housing six Next.js applications and shared packages for a full-stack car services ecosystem."
+---
+
+KaroCar Platform is a production-grade monorepo built on [Turborepo](https://turbo.build/repo) and [pnpm workspaces](https://pnpm.io/workspaces), unifying six Next.js applications — public website, admin dashboard, authentication service, customer portal, vendor dashboard, and corporate portal — alongside a suite of shared packages. Whether you're an internal engineer onboarding to the codebase or an integrator extending one of the apps, everything you need lives in a single, well-orchestrated repository with consistent tooling, shared UI components, and fast incremental builds out of the box.
+
+## Multi-App Architecture
+
+The platform is intentionally split into purpose-built Next.js applications, each owned by a distinct user group, while sharing a common design system and configuration layer. All apps live under the `apps/` directory, and all shared code lives under `packages/`.
+
+| App | Directory | Purpose |
+|-----|-----------|---------|
+| **Web** | `apps/web` | Public-facing marketing and service discovery website |
+| **Admin** | `apps/admin` | Internal admin dashboard for operations and oversight |
+| **Auth** | `apps/auth` | Centralised authentication and session service |
+| **Customer** | `apps/customer` | Self-service portal for end customers |
+| **Vendor** | `apps/vendor` | Dashboard for car-service vendors and partners |
+| **Corporate** | `apps/corporate` | Portal for corporate fleet and B2B accounts |
+
+<Note>
+  All six applications are 100% TypeScript and share the same `@karo-car/ui`
+  component library, ESLint configuration, and TypeScript presets — so a change
+  to a shared package is immediately available to every app on the next build.
+</Note>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="Turborepo Task Orchestration" icon="diagram-project">
+    Turborepo's task graph ensures packages are built before the apps that
+    depend on them, and unchanged work is never repeated thanks to
+    content-addressed local caching.
+  </Card>
+  <Card title="pnpm Workspaces" icon="boxes-stacked">
+    A single `pnpm install` at the repo root installs dependencies for all six
+    apps and every shared package, with hard-linked `node_modules` that keep
+    disk usage minimal.
+  </Card>
+  <Card title="Shared @karo-car/ui Library" icon="layer-group">
+    A first-party React component library consumed by every app. Update a
+    button once and the change ripples across the entire platform without
+    copy-pasting code.
+  </Card>
+  <Card title="TypeScript Strict Mode" icon="shield-check">
+    Shared `tsconfig` presets (in `packages/typescript-config`) enforce strict
+    TypeScript across every workspace package, catching type errors before they
+    reach production.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="paintbrush">
+    Each application is styled with Tailwind CSS v4, giving developers a
+    utility-first workflow that stays consistent with the shared design tokens
+    defined in `@karo-car/ui`.
+  </Card>
+  <Card title="ESLint & Prettier Config Sharing" icon="code">
+    `packages/eslint-config` exports reusable ESLint rule sets (including
+    `eslint-config-next` and `eslint-config-prettier`), so every app lints and
+    formats code identically with zero duplication.
+  </Card>
+</CardGroup>
+
+## Monorepo Philosophy
+
+KaroCar Platform treats the entire car-services product as a single unit of deployment reasoning while still allowing each application to be developed, tested, and deployed independently. This philosophy, sometimes called a _focused monorepo_, offers the best of both worlds:
+
+- **Atomic changes** — a pull request can update the UI library and all consuming apps in one commit, eliminating version-skew bugs.
+- **Shared standards** — linting, formatting, and TypeScript rules are defined once at the package level, not duplicated in every app's config files.
+- **Incremental builds** — Turborepo's task graph and local (or [remote](development/remote-caching)) cache mean that only the apps and packages affected by a change are rebuilt, keeping CI times fast even as the codebase grows.
+- **Independent deployments** — despite living in the same repo, each Next.js app produces its own `.next` build artifact and can be deployed to its own Vercel project or container.
+
+<Tip>
+  Turborepo's remote caching (via Vercel) lets your entire team and CI/CD
+  pipeline share a single build cache. Once one machine builds a package, no
+  other machine ever rebuilds it from scratch — see the
+  [Remote Caching](/development/remote-caching) guide to enable it.
+</Tip>
+
+## What's Next?
+
+Follow the [Quickstart](/quickstart) to clone the repo and run all six apps locally in under five minutes, or jump straight to [Monorepo Structure](/monorepo-structure) for a deep dive into the directory layout, workspace globs, and Turborepo task definitions.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Clone the repo, install dependencies, and start every app with a single
+    command.
+  </Card>
+  <Card title="Monorepo Structure" icon="folder-tree" href="/monorepo-structure">
+    Explore the directory layout, pnpm workspace globs, and Turborepo task
+    graph in detail.
+  </Card>
+</CardGroup>

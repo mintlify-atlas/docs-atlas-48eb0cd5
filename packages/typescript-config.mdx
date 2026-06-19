@@ -1,0 +1,177 @@
+---
+title: "@repo/typescript-config: Shared tsconfig Presets"
+sidebarTitle: "TS Config"
+description: "Shared TypeScript configuration presets for all KaroCar Platform workspaces, ensuring strict type checking, ES2022 targeting, and consistent compiler options."
+---
+
+`@repo/typescript-config` provides three TypeScript configuration presets consumed across all KaroCar Platform workspaces, ensuring consistent compiler options, strict type checking, and ES2022 targeting throughout the monorepo. Each workspace's `tsconfig.json` extends one of these presets and optionally overrides only what is specific to that workspace, keeping the root-level options in sync automatically.
+
+<Note>
+  `@repo/typescript-config` is marked `"private": true` in its `package.json` and is **not published to npm**. It is consumed exclusively as an internal workspace dependency.
+</Note>
+
+## Installation
+
+Reference the package from any workspace's `package.json` using the `workspace:*` protocol:
+
+```json
+"devDependencies": {
+  "@repo/typescript-config": "workspace:*"
+}
+```
+
+Then extend one of the three presets from that workspace's `tsconfig.json`.
+
+---
+
+## Presets
+
+<Tabs>
+  <Tab title="base.json">
+
+### `base.json` — Foundation for All TypeScript
+
+The root preset inherited by both `nextjs.json` and `react-library.json`. It can also be extended directly by any non-framework TypeScript package (e.g., utility libraries, server-side workers, API routes).
+
+**Full source:**
+
+```json
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "incremental": false,
+    "isolatedModules": true,
+    "lib": ["es2022", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleDetection": "force",
+    "moduleResolution": "NodeNext",
+    "noUncheckedIndexedAccess": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "target": "ES2022"
+  }
+}
+```
+
+**Key compiler options explained:**
+
+| Option | Value | Why it matters |
+|---|---|---|
+| `strict` | `true` | Enables the full TypeScript strict suite: `strictNullChecks`, `strictFunctionTypes`, `noImplicitAny`, and more. |
+| `noUncheckedIndexedAccess` | `true` | Array and record index access returns `T \| undefined` rather than just `T`, preventing runtime errors from out-of-bounds reads. |
+| `isolatedModules` | `true` | Ensures each file can be safely transpiled in isolation (required for tools like esbuild, SWC, and Babel). |
+| `moduleResolution` | `NodeNext` | Uses the modern Node.js ESM resolution algorithm, supporting `package.json` `exports` fields. |
+| `module` | `NodeNext` | Emits native ES modules with `.js` import extensions, matching Node 18+ expectations. |
+| `target` | `ES2022` | Outputs modern JavaScript; no unnecessary down-compilation for runtimes that already support ES2022. |
+| `lib` | `["es2022", "DOM", "DOM.Iterable"]` | Includes type definitions for ES2022 builtins, the browser DOM, and iterable DOM collections. |
+| `declaration` + `declarationMap` | `true` | Emits `.d.ts` files and their source maps so consumers get accurate Go-to-Definition navigation. |
+| `incremental` | `false` | Disabled to avoid stale build caches in CI environments. |
+
+  </Tab>
+  <Tab title="nextjs.json">
+
+### `nextjs.json` — Next.js Applications
+
+Extends `base.json` and overrides compiler options that Next.js requires: bundler module resolution, JSX preservation for the Next.js transform pipeline, and `noEmit` to let Next.js handle output instead of `tsc`.
+
+**Full source:**
+
+```json
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "plugins": [{ "name": "next" }],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "allowJs": true,
+    "jsx": "preserve",
+    "noEmit": true
+  }
+}
+```
+
+**What changes from base:**
+
+| Option | base.json | nextjs.json | Reason |
+|---|---|---|---|
+| `module` | `NodeNext` | `ESNext` | Next.js / webpack bundle handles module format. |
+| `moduleResolution` | `NodeNext` | `Bundler` | Bundler mode supports bare specifiers and `exports` fields used by Next.js. |
+| `jsx` | _(unset)_ | `preserve` | Passes JSX through to Next.js's Babel/SWC transform. |
+| `noEmit` | _(unset)_ | `true` | Type-check only — Next.js manages compilation output. |
+| `allowJs` | _(unset)_ | `true` | Permits `.js` files alongside `.ts`/`.tsx` in Next.js projects. |
+| `plugins` | _(unset)_ | `[{ "name": "next" }]` | Activates the Next.js TypeScript language service plugin for enhanced editor diagnostics. |
+
+**Usage — `tsconfig.json` in any Next.js app:**
+
+```json
+{
+  "extends": "@repo/typescript-config/nextjs.json"
+}
+```
+
+  </Tab>
+  <Tab title="react-library.json">
+
+### `react-library.json` — React Library Packages
+
+Extends `base.json` with the single addition of `"jsx": "react-jsx"`. Use this for any internal package that exports React components (e.g., `@karo-car/ui`). Unlike `nextjs.json`, this preset **does** emit output files, making it suitable for packages that are compiled and consumed by other workspaces.
+
+**Full source:**
+
+```json
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "./base.json",
+  "compilerOptions": {
+    "jsx": "react-jsx"
+  }
+}
+```
+
+**What changes from base:**
+
+| Option | Value | Reason |
+|---|---|---|
+| `jsx` | `react-jsx` | Uses the modern React 17+ automatic JSX transform — no need to `import React` in every file. |
+
+**Usage — `tsconfig.json` in any React library package:**
+
+```json
+{
+  "extends": "@repo/typescript-config/react-library.json"
+}
+```
+
+  </Tab>
+</Tabs>
+
+---
+
+## Type Checking
+
+Run `tsc --noEmit` across all workspaces in one command from the monorepo root:
+
+```bash
+# Via pnpm
+pnpm check-types
+
+# Via Turbo (with caching and correct dependency order)
+turbo run check-types
+```
+
+Each workspace's `check-types` script calls `tsc --noEmit`, which validates types against its extended preset without producing any output files. Turbo respects the workspace dependency graph, so shared packages are type-checked before the apps that consume them.
+
+Run type checking for a single workspace:
+
+```bash
+pnpm --filter @karo-car/web check-types
+```
+
+<Tip>
+  Type checking is one part of the broader code-quality pipeline. See the [Linting and Formatting](/development/linting-and-formatting) guide for how `check-types`, ESLint, and Prettier work together in the CI workflow.
+</Tip>

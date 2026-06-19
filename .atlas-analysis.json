@@ -1,0 +1,89 @@
+{
+  "projectType": "saas",
+  "projectName": "KaroCar Platform",
+  "projectDescription": "A Turborepo-based monorepo hosting the KaroCar web platform, comprising multiple Next.js applications (web, admin, auth, customer, vendor, corporate) and a shared UI component library.",
+  "theme": "palm",
+  "primaryColor": "#7c7c7c",
+  "lightColor": "#080808",
+  "darkColor": "#c1c1c1",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Overview",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "monorepo-structure"
+            ]
+          },
+          {
+            "group": "Applications",
+            "pages": [
+              "apps/web",
+              "apps/admin",
+              "apps/auth",
+              "apps/customer",
+              "apps/vendor",
+              "apps/corporate"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/local-setup",
+              "development/building",
+              "development/linting-and-formatting",
+              "development/remote-caching"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Packages",
+        "groups": [
+          {
+            "group": "Shared UI Library",
+            "pages": [
+              "packages/ui/overview",
+              "packages/ui/button",
+              "packages/ui/card",
+              "packages/ui/code"
+            ]
+          },
+          {
+            "group": "Configuration Packages",
+            "pages": [
+              "packages/eslint-config",
+              "packages/typescript-config"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Turborepo monorepo with task orchestration and caching",
+    "Six dedicated Next.js applications: web, admin, auth, customer, vendor, and corporate",
+    "Shared @karo-car/ui React component library consumed across apps",
+    "Shared ESLint and TypeScript configuration packages for consistent code quality",
+    "pnpm workspaces for efficient dependency management",
+    "Vercel Remote Cache support for distributed build caching",
+    "Tailwind CSS v4 for styling across all applications",
+    "Full TypeScript throughout with strict compiler settings"
+  ],
+  "publicApiSurface": [
+    "@karo-car/ui: Button component",
+    "@karo-car/ui: Card component",
+    "@karo-car/ui: Code component",
+    "@repo/eslint-config: base, next, react-internal configs",
+    "@repo/typescript-config: base, nextjs, react-library tsconfig presets",
+    "turbo run build — build all apps and packages",
+    "turbo run dev — start all apps in development mode",
+    "turbo run lint — lint all workspaces",
+    "turbo run check-types — typecheck all workspaces",
+    "turbo build --filter=<app> — build a specific app"
+  ]
+}

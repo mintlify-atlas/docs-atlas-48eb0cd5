@@ -1,0 +1,169 @@
+---
+title: "Linting and Formatting in KaroCar Platform"
+sidebarTitle: "Linting"
+description: "How KaroCar Platform uses ESLint and Prettier across the monorepo — shared configs, Turbo env-var rules, and running checks in CI."
+---
+
+Consistent code quality across six apps and multiple shared packages is enforced by two complementary tools: **ESLint** for static analysis and **Prettier** for deterministic formatting. Both are orchestrated through Turborepo so that only affected workspaces are rechecked when code changes, and all rules are sourced from shared configs in `packages/eslint-config` so every app inherits the same baseline.
+
+---
+
+## ESLint
+
+### Running the Linter
+
+Lint all workspaces from the repository root:
+
+```bash
+pnpm lint
+```
+
+This runs `turbo run lint`, which executes the `lint` script defined in each workspace's `package.json` in parallel. To lint only one app:
+
+```bash
+turbo lint --filter=web
+turbo lint --filter=admin
+```
+
+### Shared ESLint Configs
+
+All ESLint configuration lives in `packages/eslint-config` and is published internally as `@repo/eslint-config`. There are three named exports, each targeting a different context:
+
+| Export | Used by | What it adds |
+|---|---|---|
+| `@repo/eslint-config/base` | All workspaces | JS, TypeScript, Turbo plugin, Prettier compat |
+| `@repo/eslint-config/next` | Next.js apps | Extends base + Next.js & Core Web Vitals rules |
+| `@repo/eslint-config/react-internal` | Internal React packages | Extends base + React hooks rules |
+
+#### `@repo/eslint-config/base`
+
+The foundation for every workspace. It composes several upstream configs and adds two important plugins:
+
+```javascript
+import js from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier";
+import turboPlugin from "eslint-plugin-turbo";
+import tseslint from "typescript-eslint";
+import onlyWarn from "eslint-plugin-only-warn";
+
+/**
+ * A shared ESLint configuration for the repository.
+ *
+ * @type {import("eslint").Linter.Config[]}
+ * */
+export const config = [
+  js.configs.recommended,
+  eslintConfigPrettier,
+  ...tseslint.configs.recommended,
+  {
+    plugins: {
+      turbo: turboPlugin,
+    },
+    rules: {
+      "turbo/no-undeclared-env-vars": "warn",
+    },
+  },
+  {
+    plugins: {
+      onlyWarn,
+    },
+  },
+  {
+    ignores: ["dist/**"],
+  },
+];
+```
+
+#### `@repo/eslint-config/next`
+
+Extends `base` and layers in the official Next.js ESLint plugin with both its `recommended` and `core-web-vitals` rule sets, plus React Hooks rules. Used by all apps in `apps/`:
+
+```javascript
+import { config as baseConfig } from "./base.js";
+import pluginNext from "@next/eslint-plugin-next";
+// ... (react, react-hooks, globals)
+
+export const nextJsConfig = [
+  ...baseConfig,
+  {
+    plugins: { "@next/next": pluginNext },
+    rules: {
+      ...pluginNext.configs.recommended.rules,
+      ...pluginNext.configs["core-web-vitals"].rules,
+    },
+  },
+  // React Hooks + "react/react-in-jsx-scope": "off"
+];
+```
+
+#### `@repo/eslint-config/react-internal`
+
+Extends `base` with React and React Hooks rules, targeting shared component packages (like `@karo-car/ui`) that ship React components but are not Next.js apps.
+
+### Turbo Environment Variable Rule
+
+The `turbo/no-undeclared-env-vars` rule (from `eslint-plugin-turbo`) warns whenever your code reads a `process.env` variable that hasn't been declared in that workspace's Turborepo task configuration. This prevents silent failures where a missing env var causes a build to succeed locally but fail in CI.
+
+<Note>
+  All ESLint rules in KaroCar Platform emit **warnings**, not errors, thanks to
+  `eslint-plugin-only-warn`. This keeps your editor experience smooth during
+  active development while still surfacing issues — and CI can be configured to
+  treat warnings as errors with the `--max-warnings 0` flag if desired.
+</Note>
+
+---
+
+## Prettier
+
+### Running the Formatter
+
+Prettier is configured to format TypeScript, TSX, and Markdown files. Run it from the repository root:
+
+```bash
+pnpm format
+```
+
+This executes:
+
+```bash
+prettier --write "**/*.{ts,tsx,md}"
+```
+
+To check formatting without writing changes (useful in CI):
+
+```bash
+pnpm exec prettier --check "**/*.{ts,tsx,md}"
+```
+
+### Prettier + ESLint Integration
+
+`eslint-config-prettier` is included in `@repo/eslint-config/base`. It disables any ESLint rules that would conflict with Prettier's formatting decisions, so the two tools never disagree about whitespace, semicolons, or quote style.
+
+---
+
+## Type Checking
+
+Type checking is a separate step from linting and runs via its own Turborepo task:
+
+```bash
+pnpm check-types
+```
+
+This runs `turbo run check-types` across all workspaces, executing `tsc --noEmit` in each one. Because it's a distinct task, Turborepo caches its results independently — a workspace whose source files haven't changed won't re-run `tsc`.
+
+---
+
+## Running All Checks Together
+
+<Tip>
+  In CI, run all three checks in sequence to catch every class of issue before
+  merging:
+
+  ```bash
+  pnpm lint && pnpm exec prettier --check "**/*.{ts,tsx,md}" && pnpm check-types
+  ```
+
+  - `pnpm lint` — static analysis across all workspaces via Turborepo
+  - `prettier --check` — verify formatting without modifying files
+  - `pnpm check-types` — full TypeScript type correctness check
+</Tip>

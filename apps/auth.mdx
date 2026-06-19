@@ -1,0 +1,153 @@
+---
+title: "KaroCar Auth: Centralised Authentication App"
+sidebarTitle: "Auth"
+description: "The dedicated authentication service for the KaroCar Platform, acting as the centralised sign-in and sign-up entry point for all other applications."
+---
+
+The `auth` app is the dedicated authentication service for the KaroCar Platform. It acts as the single, centralised sign-in and sign-up entry point — other applications in the monorepo redirect unauthenticated users here to complete login or registration before returning them to their original destination. The homepage (`app/page.tsx`) renders the **Authentication** heading and descriptive copy confirming its role within the platform.
+
+<Info>
+  The `auth` app is designed as the **centralised authentication point** for the
+  entire KaroCar Platform. Rather than each application implementing its own
+  login screens, the web, admin, customer, vendor, and corporate apps all
+  redirect to the `auth` app for login flows. This keeps authentication logic,
+  session handling, and security policies in one place, making audits and
+  updates straightforward.
+</Info>
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components for secure, server-side session handling and form processing.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    Latest stable React for responsive, interactive authentication flows.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first styling consistent with all other apps in the monorepo.
+  </Card>
+  <Card title="TypeScript 5" icon="code">
+    Full type safety across authentication logic, form handlers, and session utilities.
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```
+apps/auth/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Authentication entry page
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+The `app/page.tsx` renders the top-level `Authentication` heading alongside supporting copy. Route groups and additional pages (e.g. `/sign-in`, `/sign-up`, `/forgot-password`) are expected to be added under the `app/` directory using Next.js App Router conventions.
+
+## Package Configuration
+
+The `auth` app has no internal workspace UI dependencies — authentication UI is built directly within this app to keep the sign-in surface self-contained and independently deployable.
+
+```json
+{
+  "name": "auth",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
+## Development Commands
+
+<CodeGroup>
+
+```bash Turbo filtered
+turbo dev --filter=auth
+```
+
+```bash pnpm filter
+pnpm --filter auth dev
+```
+
+```bash Global (all apps)
+pnpm dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `turbo dev --filter=auth` to run the authentication service in isolation
+  — perfect when developing sign-in and sign-up flows without needing the full
+  platform stack. The auth app has no workspace package dependencies, so it
+  starts up immediately without any upstream build steps.
+</Tip>
+
+Next.js defaults to **port 3000**. When running alongside other apps (e.g. the `web` or `admin` apps), the auth app will be assigned the next free port. Check your terminal output for the exact address.
+
+## Building & Starting
+
+<CodeGroup>
+
+```bash Turbo
+turbo build --filter=auth && turbo start --filter=auth
+```
+
+```bash pnpm
+pnpm --filter auth build && pnpm --filter auth start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    Run `pnpm install` from the monorepo root to link all workspace packages.
+  </Step>
+  <Step title="Build the auth app">
+    Run `turbo build --filter=auth`. No upstream workspace packages need to be built first.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=auth`. Navigate to the printed URL to verify the Authentication page renders correctly.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter auth lint
+```
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="Web App" icon="globe" href="/apps/web">
+    The public-facing site that redirects unauthenticated users to the auth app.
+  </Card>
+  <Card title="Admin App" icon="shield" href="/apps/admin">
+    The internal dashboard that relies on the auth app for operator sign-in.
+  </Card>
+  <Card title="Customer Portal" icon="user" href="/apps/customer">
+    The customer-facing app that depends on the auth app for user sessions.
+  </Card>
+  <Card title="Local Setup" icon="laptop" href="/development/local-setup">
+    Step-by-step guide to running the full platform stack locally.
+  </Card>
+</CardGroup>

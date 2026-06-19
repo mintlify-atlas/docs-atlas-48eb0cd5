@@ -1,0 +1,189 @@
+---
+title: "Set Up KaroCar Platform for Local Development"
+sidebarTitle: "Local Setup"
+description: "Get the full KaroCar Platform monorepo running on your machine — install dependencies, configure pnpm workspaces, and start all dev servers."
+---
+
+Getting KaroCar Platform running locally means bootstrapping a Turborepo monorepo that contains six Next.js apps and several shared packages. Because all apps and packages live in a single repository managed by pnpm workspaces, a single `pnpm install` from the root wires everything together — shared UI components, ESLint configs, and TypeScript configs are all available immediately without any separate publish step.
+
+## Prerequisites
+
+Make sure the following tools are installed before you clone the repository.
+
+<CardGroup cols={2}>
+  <Card title="Node.js ≥ 18" icon="node-js" href="https://nodejs.org">
+    KaroCar Platform requires Node.js 18 or later. Use the LTS release for the
+    most stable experience.
+  </Card>
+  <Card title="pnpm 9" icon="box" href="https://pnpm.io">
+    The monorepo is managed with pnpm 9. Using a different version may cause
+    lockfile conflicts.
+  </Card>
+  <Card title="Git" icon="code-branch" href="https://git-scm.com">
+    You'll need Git to clone the repository and manage branches across the
+    monorepo.
+  </Card>
+  <Card title="Turbo CLI (optional)" icon="bolt" href="https://turbo.build/repo/docs">
+    Installing Turbo globally lets you run `turbo` commands directly. Otherwise,
+    pnpm scripts delegate to the local Turbo installation automatically.
+  </Card>
+</CardGroup>
+
+## Setup Steps
+
+<Steps>
+  <Step title="Install Node.js ≥ 18">
+    Download and install the **LTS** release from [nodejs.org](https://nodejs.org). Verify the version after installation:
+
+    ```bash
+    node --version
+    # v22.x.x  (must be ≥ 18)
+    ```
+
+    If you manage multiple Node versions, [nvm](https://github.com/nvm-sh/nvm) makes switching straightforward:
+
+    ```bash
+    nvm install 22
+    nvm use 22
+    ```
+  </Step>
+
+  <Step title="Install pnpm 9">
+    The root `package.json` declares `"packageManager": "pnpm@9.0.0"`. Install pnpm 9 globally:
+
+    ```bash
+    npm install -g pnpm@9
+    ```
+
+    Confirm the installation:
+
+    ```bash
+    pnpm --version
+    # 9.x.x
+    ```
+  </Step>
+
+  <Step title="Install Turbo globally (optional)">
+    Turbo is already listed as a devDependency in the root `package.json`, so all `pnpm` scripts work without a global install. If you prefer running `turbo` directly in your terminal, install it globally:
+
+    ```bash
+    npm install -g turbo
+    ```
+  </Step>
+
+  <Step title="Clone the repository">
+    Clone the KaroCar Platform repository and navigate into it:
+
+    ```bash
+    git clone https://github.com/Codefied-CodePix/KaroCar-platform.git
+    cd KaroCar-platform
+    ```
+  </Step>
+
+  <Step title="Install all workspace dependencies">
+    A single `pnpm install` from the repository root installs dependencies for every app and package defined in `pnpm-workspace.yaml`:
+
+    ```bash
+    pnpm install
+    ```
+
+    pnpm resolves the `workspace:*` protocol used by apps that depend on shared packages such as `@karo-car/ui`, linking them directly from the `packages/` directory instead of fetching them from a registry.
+  </Step>
+
+  <Step title="Start the development servers">
+    Run all apps in watch mode with a single command:
+
+    ```bash
+    pnpm dev
+    ```
+
+    Alternatively, if you installed Turbo globally:
+
+    ```bash
+    turbo dev
+    ```
+
+    Turborepo starts every app in the `apps/*` workspace concurrently and streams their output to your terminal, colour-coded by package name.
+  </Step>
+</Steps>
+
+## Workspace Resolution
+
+KaroCar Platform uses pnpm's `workspace:*` protocol to link internal packages. When an app's `package.json` lists `"@karo-car/ui": "workspace:*"`, pnpm resolves that dependency directly from `packages/ui` on your local disk. This means:
+
+- Changes to a shared package are reflected in apps **immediately** without re-publishing.
+- There is no need to run `pnpm build` on a package before consuming it in an app during development (Next.js transpiles workspace packages on the fly).
+
+The workspace glob patterns are defined in `pnpm-workspace.yaml`:
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+<Note>
+  The `.npmrc` file at the repository root contains pnpm-specific configuration.
+  If you encounter unexpected peer-dependency warnings or hoisting behaviour,
+  check that file first — settings there control how pnpm resolves and hoists
+  node modules across the workspace.
+</Note>
+
+## Running a Single App
+
+You don't have to start every app at once. Pass a `--filter` flag to run only the app you're working on:
+
+```bash
+turbo dev --filter=web
+turbo dev --filter=admin
+turbo dev --filter=auth
+```
+
+<Tip>
+  `--filter` accepts any package name (as declared in that workspace's
+  `package.json`) or a glob. Use `turbo dev --filter=web...` (with trailing
+  `...`) to also start any packages that `web` depends on.
+</Tip>
+
+## Troubleshooting
+
+<Accordion title="Port already in use">
+  If a Next.js app fails to start because its default port (3000, 3001, etc.) is
+  already occupied, find and kill the process using that port:
+
+  ```bash
+  # macOS / Linux
+  lsof -ti tcp:3000 | xargs kill
+
+  # Windows (PowerShell)
+  Get-Process -Id (Get-NetTCPConnection -LocalPort 3000).OwningProcess | Stop-Process
+  ```
+
+  You can also configure a different port by setting the `PORT` environment
+  variable in the app's `.env.local` file.
+</Accordion>
+
+<Accordion title='Module not found: @karo-car/ui'>
+  This error usually means pnpm's workspace symlinks are missing or stale. Run
+  `pnpm install` from the **repository root** (not from inside an individual
+  app) to regenerate them:
+
+  ```bash
+  cd KaroCar-platform   # make sure you're at the root
+  pnpm install
+  ```
+</Accordion>
+
+<Accordion title="Node version mismatch">
+  The `engines` field in `package.json` requires Node ≥ 18. If you see an
+  engine compatibility error, switch your active Node version with nvm:
+
+  ```bash
+  nvm install 22
+  nvm use 22
+  node --version   # should print v22.x.x
+  ```
+
+  Consider adding a `.nvmrc` file to your local checkout so that `nvm use`
+  automatically picks the right version.
+</Accordion>

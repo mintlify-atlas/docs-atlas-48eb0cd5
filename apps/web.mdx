@@ -1,0 +1,151 @@
+---
+title: "KaroCar Web App: Public-Facing Website"
+sidebarTitle: "Web"
+description: "The public-facing KaroCar website built with Next.js 16 and Tailwind CSS v4, serving as the main marketing and entry-point application for the platform."
+---
+
+The `web` app is the public-facing KaroCar website — the front door of the entire platform. Built with Next.js 16 and Tailwind CSS v4, it delivers the marketing homepage and serves as the primary entry point for visitors discovering KaroCar services. The root layout (`layout.tsx`) loads the **Geist** and **Geist Mono** Google fonts via `next/font`, wires up global styles, and wraps every page in a flex column to ensure full-height rendering across light and dark modes.
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components, file-based routing, and the latest Next.js performance optimisations.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    The latest stable React with concurrent features and improved hydration.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first CSS with the new v4 engine powered by `@tailwindcss/postcss`.
+  </Card>
+  <Card title="TypeScript 5" icon="code">
+    Strict type-checking across all source files with shared `tsconfig` from the monorepo root.
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```
+apps/web/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Homepage
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+The homepage (`app/page.tsx`) renders the **KaroCar Website** heading alongside the Next.js logo and action links. The root layout initialises the Geist Sans and Geist Mono font variables and applies `antialiased` rendering to the body.
+
+## Package Configuration
+
+Below is the `package.json` for the `web` app. It has no internal workspace dependencies — all shared tooling comes through dev dependencies.
+
+```json
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
+## Development Commands
+
+Start the development server for the `web` app using either the global monorepo command or a filtered Turborepo invocation:
+
+<CodeGroup>
+
+```bash Global (all apps)
+pnpm dev
+```
+
+```bash Filtered (web only)
+turbo dev --filter=web
+```
+
+```bash pnpm filter
+pnpm --filter web dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `--filter=web` to spin up only the web app and skip starting the admin,
+  auth, customer, vendor, and corporate dev servers. This significantly reduces
+  cold-start time and memory usage during front-end development.
+</Tip>
+
+The development server starts on **port 3000** by default (Next.js standard). If port 3000 is already occupied, Next.js will automatically increment to the next available port and log the URL in the terminal.
+
+## Building & Starting
+
+Run a production build and then serve it with the Next.js production server:
+
+<CodeGroup>
+
+```bash Turbo (build then start)
+turbo build --filter=web && turbo start --filter=web
+```
+
+```bash pnpm (build then start)
+pnpm --filter web build && pnpm --filter web start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    From the monorepo root, run `pnpm install` to ensure all workspace packages are linked.
+  </Step>
+  <Step title="Build the app">
+    Run `turbo build --filter=web`. Turborepo caches the output in `.turbo/` so subsequent builds only rebuild changed files.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=web`. The app will be available at `http://localhost:3000`.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter web lint
+# or
+turbo lint --filter=web
+```
+
+ESLint is configured via the shared `@karo-car/eslint-config` package at the monorepo root. See [ESLint Config](/packages/eslint-config) for the full rule set.
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="Monorepo Structure" icon="sitemap" href="/monorepo-structure">
+    Understand how all six apps fit together in the Turborepo workspace.
+  </Card>
+  <Card title="Local Setup" icon="laptop" href="/development/local-setup">
+    First-time setup guide for getting the full platform running locally.
+  </Card>
+  <Card title="Building" icon="hammer" href="/development/building">
+    Deep-dive into Turborepo build pipelines and caching strategies.
+  </Card>
+  <Card title="Remote Caching" icon="cloud" href="/development/remote-caching">
+    Speed up CI/CD with Turborepo remote cache.
+  </Card>
+</CardGroup>

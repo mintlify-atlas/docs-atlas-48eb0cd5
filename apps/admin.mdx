@@ -1,0 +1,168 @@
+---
+title: "KaroCar Admin Dashboard Application"
+sidebarTitle: "Admin"
+description: "The internal management interface for the KaroCar Platform, built with Next.js 16, Tailwind CSS v4, and the shared @karo-car/ui component library."
+---
+
+The `admin` app is the internal management interface for the KaroCar Platform. Built with Next.js 16 and the shared `@karo-car/ui` component library, it gives platform operators the tools they need to manage users, vehicles, bookings, and platform-wide configuration. Unlike the public-facing `web` app, the admin dashboard is an authenticated, internal surface — access should be restricted to authorised operators only.
+
+<Note>
+  This application is intended for **internal operators only**, not public users
+  or customers. Ensure appropriate authentication and network-level access
+  controls are in place before deploying to production.
+</Note>
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components and file-based routing optimised for dashboard-style applications.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    Latest stable React with concurrent rendering for responsive, data-heavy UI.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first styling with the v4 PostCSS engine, consistent with all other apps in the monorepo.
+  </Card>
+  <Card title="@karo-car/ui" icon="puzzle">
+    Shared internal component library providing `Button`, `Card`, and other building-block components.
+  </Card>
+</CardGroup>
+
+## Shared UI Components
+
+The admin app depends on the `@karo-car/ui` workspace package (`"@karo-car/ui": "workspace:*"`). This links directly to `packages/ui` in the monorepo, so any changes to the shared library are immediately reflected here without a separate publish step.
+
+The homepage (`app/page.tsx`) already imports and renders the shared `Button` component:
+
+```typescript
+import { Button } from "@karo-car/ui";
+
+export default function Home() {
+  return (
+    <main>
+      <h1>Admin Dashboard</h1>
+      <Button appName="Admin">Admin</Button>
+      <p>Admin Dashboard for KaroCar Platform</p>
+    </main>
+  );
+}
+```
+
+The `Button` component accepts an `appName` prop that identifies which application is rendering it — useful for analytics and shared component telemetry. See the [Button component docs](/packages/ui/button) for the full API.
+
+## Directory Structure
+
+```
+apps/admin/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Admin homepage with shared Button
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+## Package Configuration
+
+The `admin` package declares `@karo-car/ui` as a runtime dependency using the `workspace:*` protocol, which resolves to the local `packages/ui` package managed by pnpm workspaces.
+
+```json
+{
+  "name": "admin",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@karo-car/ui": "workspace:*"
+  }
+}
+```
+
+## Development Commands
+
+<CodeGroup>
+
+```bash Turbo filtered
+turbo dev --filter=admin
+```
+
+```bash pnpm filter
+pnpm --filter admin dev
+```
+
+```bash Global (all apps)
+pnpm dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Run `turbo dev --filter=admin` to start only the admin app. Because
+  `@karo-car/ui` is a local workspace package, Turborepo automatically rebuilds
+  it when its source changes — no manual linking needed.
+</Tip>
+
+Next.js starts on **port 3000** by default. If you are running multiple apps simultaneously, each will be assigned the next available port (3001, 3002, etc.). Check the terminal output for the exact URL.
+
+## Building & Starting
+
+<CodeGroup>
+
+```bash Turbo
+turbo build --filter=admin && turbo start --filter=admin
+```
+
+```bash pnpm
+pnpm --filter admin build && pnpm --filter admin start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    Run `pnpm install` from the monorepo root. The `workspace:*` protocol ensures `@karo-car/ui` is symlinked automatically.
+  </Step>
+  <Step title="Build @karo-car/ui first">
+    If your pipeline does not already handle this, run `turbo build --filter=@karo-car/ui` before building the admin app to ensure the UI package output is up to date.
+  </Step>
+  <Step title="Build the admin app">
+    Run `turbo build --filter=admin`. Turborepo respects the dependency graph and builds `@karo-car/ui` first if needed.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=admin` and navigate to the printed localhost URL.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter admin lint
+```
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="UI Package Overview" icon="puzzle" href="/packages/ui/overview">
+    Learn about the shared @karo-car/ui component library used by this app.
+  </Card>
+  <Card title="Button Component" icon="cursor-click" href="/packages/ui/button">
+    Full API reference for the shared Button component imported in admin.
+  </Card>
+  <Card title="Auth App" icon="lock" href="/apps/auth">
+    The centralised authentication service that gates access to this dashboard.
+  </Card>
+  <Card title="Local Setup" icon="laptop" href="/development/local-setup">
+    First-time setup guide for running the full platform locally.
+  </Card>
+</CardGroup>

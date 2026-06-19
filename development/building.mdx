@@ -1,0 +1,119 @@
+---
+title: "Building KaroCar Platform Apps and Packages"
+sidebarTitle: "Building"
+description: "Understand Turborepo's incremental build pipeline for KaroCar Platform — task graphs, output caching, filtered builds, and type checking."
+---
+
+KaroCar Platform uses Turborepo's incremental build system to orchestrate compilation across all six Next.js apps and their shared packages. Rather than rebuilding the entire monorepo on every change, Turborepo tracks task inputs and outputs, skipping work that hasn't changed since the last successful run. This means that after the first full build, subsequent builds complete in a fraction of the time.
+
+## Build Task Graph
+
+The `build` task in `turbo.json` declares `"dependsOn": ["^build"]`. The caret (`^`) prefix means **"build all upstream workspace dependencies first"**. In practice this enforces the following order:
+
+1. Shared packages (`packages/ui`, `packages/eslint-config`, `packages/typescript-config`) build first.
+2. Apps (`apps/web`, `apps/admin`, `apps/auth`, etc.) build only after every package they depend on has finished.
+
+This guarantees that each Next.js app always compiles against up-to-date, fully-built versions of shared packages — without any manual coordination on your part.
+
+## Running a Full Build
+
+Choose whichever invocation matches your setup:
+
+<CodeGroup>
+```bash turbo (global)
+turbo build
+```
+
+```bash pnpm
+pnpm build
+```
+
+```bash npx
+npx turbo build
+```
+</CodeGroup>
+
+All three commands resolve to `turbo run build` and execute the same pipeline. The pnpm script is defined in the root `package.json`:
+
+```json
+{
+  "scripts": {
+    "build": "turbo run build"
+  }
+}
+```
+
+## Building a Specific App or Package
+
+Use Turborepo's `--filter` flag to scope the build to a single workspace. Turbo still respects the task graph, so any packages the target depends on are built first automatically.
+
+```bash
+# Build only the web app (and its dependencies)
+turbo build --filter=web
+
+# Build only the admin app
+turbo build --filter=admin
+
+# Build the shared UI package
+turbo build --filter=@karo-car/ui
+```
+
+<Tip>
+  Run `turbo build --dry` (or `turbo build --dry=json`) to preview exactly which
+  tasks would run — and in what order — without actually executing them. This is
+  useful for debugging a slow pipeline before committing to a full rebuild.
+</Tip>
+
+## Build Outputs
+
+For Next.js apps, Turborepo is configured to cache the `.next/` directory. This is declared in `turbo.json` under the `outputs` field of the `build` task:
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {},
+    "test": {}
+  }
+}
+```
+
+The `.next/**` glob tells Turborepo to save and restore the entire Next.js build output as part of its cache. When the same code is built again — by you, a colleague, or a CI runner — Turbo restores `.next/` from cache instead of rerunning `next build`.
+
+<Note>
+  The `dev` task sets `"cache": false` because hot-reload servers are
+  long-running processes whose output cannot meaningfully be cached. The
+  `lint` and `test` tasks use Turborepo's default caching based on source file
+  fingerprints.
+</Note>
+
+## Local Build Cache
+
+Turborepo stores build artifacts in `.turbo/` at the repository root. The first time you build, every task runs and its output is hashed and stored. On subsequent runs:
+
+- If **nothing has changed** in a workspace, Turbo replays the cached output instantly and marks the task as `cache hit`.
+- If **any input file has changed**, only the affected workspace (and any dependents) is rebuilt.
+
+You'll see one of these status indicators next to each task in the CLI output:
+
+| Status | Meaning |
+|---|---|
+| `cache hit, replaying logs` | Inputs unchanged — output restored from cache |
+| `cache miss, executing` | Inputs changed — task runs and result is cached |
+
+## Type Checking
+
+Type checking runs as a separate Turborepo task (`check-types`) so it can be parallelised across all workspaces independently of the build:
+
+```bash
+pnpm check-types
+```
+
+This invokes `turbo run check-types`, which runs `tsc --noEmit` in each workspace that defines a `check-types` script. Because type checking is a read-only analysis step, its results are also cached by Turborepo — unchanged packages won't re-run `tsc`.

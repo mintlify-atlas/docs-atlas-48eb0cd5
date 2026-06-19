@@ -1,0 +1,174 @@
+---
+title: "Turborepo Remote Caching with Vercel"
+sidebarTitle: "Remote Caching"
+description: "Speed up builds across machines and CI by connecting KaroCar Platform to Vercel's Remote Cache — share Turborepo artifacts team-wide in minutes."
+---
+
+Turborepo's local cache speeds up builds on a single machine, but by default that cache is never shared. Remote caching extends the same mechanism across every developer on your team and every CI runner in your pipeline. When a colleague or a CI job has already built the exact same code — identified by a deterministic hash of inputs — your build downloads the cached output instead of recomputing it. For a monorepo like KaroCar Platform with six apps and multiple shared packages, this can reduce cold-start build times from several minutes to under a second.
+
+## How Remote Caching Works
+
+1. Before running a task, Turbo hashes all its inputs (source files, env vars, dependency versions).
+2. It checks the remote cache for an artifact matching that hash.
+3. **Cache hit** — the output is downloaded and restored locally; the task is skipped.
+4. **Cache miss** — the task runs normally, and the output is uploaded to the remote cache for future use.
+
+The same hash algorithm is used locally and remotely, so a build that hits local cache on your machine will also hit remote cache on CI — and vice versa.
+
+<Note>
+  Vercel Remote Cache is **free for all Vercel plans**, including the Hobby
+  tier. You only need a Vercel account — you do not need to deploy KaroCar
+  Platform to Vercel to use the remote cache.
+</Note>
+
+## Enabling Remote Caching
+
+<Steps>
+  <Step title="Install Turbo globally">
+    The `turbo login` and `turbo link` commands require the Turbo CLI to be
+    available globally:
+
+    <CodeGroup>
+    ```bash npm
+    npm install -g turbo
+    ```
+
+    ```bash pnpm
+    pnpm add -g turbo
+    ```
+
+    ```bash npx (no install)
+    # Use npx turbo login / npx turbo link instead
+    ```
+    </CodeGroup>
+
+    Verify the installation:
+
+    ```bash
+    turbo --version
+    ```
+  </Step>
+
+  <Step title="Log in to Vercel">
+    Authenticate the Turbo CLI with your Vercel account. This opens a browser
+    window to complete the OAuth flow:
+
+    <CodeGroup>
+    ```bash turbo (global)
+    turbo login
+    ```
+
+    ```bash pnpm exec
+    pnpm exec turbo login
+    ```
+
+    ```bash npx
+    npx turbo login
+    ```
+    </CodeGroup>
+
+    After a successful login you'll see a confirmation message and a token is
+    stored in `~/.turbo/config.json`.
+  </Step>
+
+  <Step title="Link the repository to the Remote Cache">
+    From the KaroCar Platform repository root, link your local clone to a Vercel
+    Remote Cache space:
+
+    <CodeGroup>
+    ```bash turbo (global)
+    turbo link
+    ```
+
+    ```bash pnpm exec
+    pnpm exec turbo link
+    ```
+
+    ```bash npx
+    npx turbo link
+    ```
+    </CodeGroup>
+
+    Turbo will prompt you to select a Vercel scope (your personal account or a
+    team). Once linked, it writes the remote cache configuration into
+    `.turbo/config.json` at the repository root.
+  </Step>
+
+  <Step title="Build — now with remote caching">
+    Run a build exactly as you normally would:
+
+    <CodeGroup>
+    ```bash turbo (global)
+    turbo build
+    ```
+
+    ```bash pnpm
+    pnpm build
+    ```
+
+    ```bash npx
+    npx turbo build
+    ```
+    </CodeGroup>
+
+    On the first run after linking, artifacts are uploaded to the remote cache.
+    On every subsequent run — by you, a teammate, or CI — matching tasks are
+    restored from the cache instead of rebuilt.
+  </Step>
+</Steps>
+
+## Recognising a Cache Hit
+
+When every task in a pipeline is restored from cache, Turborepo prints:
+
+```
+>>> FULL TURBO
+```
+
+<Tip>
+  **"FULL TURBO"** in the CLI output means all tasks were satisfied by the cache
+  and no actual work was performed. A fully-cached build of KaroCar Platform
+  completes in under one second regardless of the number of apps or packages in
+  the pipeline.
+</Tip>
+
+Individual cached tasks are marked `cache hit, replaying logs` in the task output stream.
+
+## CI/CD Configuration
+
+In CI environments (GitHub Actions, GitLab CI, CircleCI, etc.) you can't run `turbo login` interactively. Instead, pass credentials as environment variables:
+
+| Variable | Description |
+|---|---|
+| `TURBO_TOKEN` | A Vercel personal access token with remote-cache read/write scope |
+| `TURBO_TEAM` | Your Vercel team slug (e.g. `my-org`) — omit for personal accounts |
+
+### GitHub Actions Example
+
+```yaml
+- name: Build
+  run: pnpm build
+  env:
+    TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+    TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+```
+
+Generate a `TURBO_TOKEN` in your [Vercel account settings](https://vercel.com/account/tokens) and store it as a repository secret. Set `TURBO_TEAM` to your Vercel team slug if you linked to a team scope during `turbo link`.
+
+## Important Notes
+
+<Warning>
+  Do **not** commit the `.turbo/` directory to version control. It contains
+  local cache metadata and authentication tokens. Add it to your `.gitignore`:
+
+  ```
+  .turbo/
+  ```
+</Warning>
+
+<Note>
+  Remote caching is opt-in per developer. Team members who have not run
+  `turbo link` still benefit indirectly — artifacts uploaded by CI are
+  available for anyone who subsequently links their machine to the same
+  Vercel scope.
+</Note>

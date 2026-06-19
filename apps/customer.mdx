@@ -1,0 +1,144 @@
+---
+title: "KaroCar Customer Portal Application"
+sidebarTitle: "Customer"
+description: "The self-service portal for KaroCar end users, providing booking management, account settings, and access to KaroCar services in a dedicated Next.js app."
+---
+
+The `customer` app is the self-service portal for KaroCar end users. It provides the interface through which customers manage their bookings, review past orders, update account details, and access all KaroCar consumer-facing services. Built with Next.js 16 and Tailwind CSS v4, the portal delivers a responsive, dark-mode-aware experience. The homepage (`app/page.tsx`) renders the **Customer Dashboard** heading as the authenticated entry point for end users.
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components for fast, SEO-friendly page rendering and nested route layouts.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    Latest stable React with concurrent features for responsive, data-driven dashboard views.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first CSS with the v4 PostCSS engine, dark-mode support, and monorepo-consistent styling.
+  </Card>
+  <Card title="TypeScript 5" icon="code">
+    Full type safety across booking models, API responses, and component props.
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```
+apps/customer/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Customer Dashboard homepage
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+The `app/page.tsx` renders the **Customer Dashboard** heading and introductory copy. Additional routes such as `/bookings`, `/profile`, and `/history` are expected to be added under `app/` following Next.js App Router conventions.
+
+## Package Configuration
+
+The `customer` app does not depend on any internal workspace UI packages — its component set is built locally within the app.
+
+```json
+{
+  "name": "customer",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
+## Development Commands
+
+<CodeGroup>
+
+```bash Turbo filtered
+turbo dev --filter=customer
+```
+
+```bash pnpm filter
+pnpm --filter customer dev
+```
+
+```bash Global (all apps)
+pnpm dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `turbo dev --filter=customer` to run only the customer portal. Since this
+  app has no upstream workspace package dependencies, it starts immediately —
+  ideal for working on booking flows and user-facing features without loading
+  the entire platform.
+</Tip>
+
+Next.js starts on **port 3000** by default. When running alongside other apps in the monorepo, the customer app will be assigned the next available port. Check the terminal output for the exact URL.
+
+## Building & Starting
+
+<CodeGroup>
+
+```bash Turbo
+turbo build --filter=customer && turbo start --filter=customer
+```
+
+```bash pnpm
+pnpm --filter customer build && pnpm --filter customer start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    Run `pnpm install` from the monorepo root to ensure all workspace packages and node_modules are in place.
+  </Step>
+  <Step title="Build the customer app">
+    Run `turbo build --filter=customer`. Turbo caches the output so unchanged pages are not rebuilt.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=customer` and open the printed URL to verify the Customer Dashboard loads correctly.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter customer lint
+```
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="Auth App" icon="lock" href="/apps/auth">
+    The centralised authentication service customers sign in through.
+  </Card>
+  <Card title="Web App" icon="globe" href="/apps/web">
+    The public-facing site where customers first discover KaroCar.
+  </Card>
+  <Card title="Vendor App" icon="store" href="/apps/vendor">
+    The vendor-facing counterpart that manages the listings customers browse.
+  </Card>
+  <Card title="Local Setup" icon="laptop" href="/development/local-setup">
+    Step-by-step guide to running the full platform stack locally.
+  </Card>
+</CardGroup>

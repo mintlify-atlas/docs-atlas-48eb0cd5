@@ -1,0 +1,74 @@
+---
+title: "Button Component — @karo-car/ui"
+sidebarTitle: "Button"
+description: "Client-side React button component that fires an alert with the consuming app's name on click, exported from @karo-car/ui."
+---
+
+The `Button` component is a client-side React button that displays an alert with the consuming app's name on click. It accepts a required `appName` prop to identify the calling application, making it easy to trace which app surfaced the interaction during development. Because it calls the browser's `alert` API, it is marked with the `"use client"` directive and must be rendered in a client component context.
+
+## TypeScript interface
+
+```typescript
+interface ButtonProps {
+  children: ReactNode;
+  className?: string;
+  appName: string;
+}
+```
+
+## Props
+
+<ParamField body="children" type="ReactNode" required>
+  The content rendered inside the button element — typically a text label or icon.
+</ParamField>
+
+<ParamField body="className" type="string">
+  One or more CSS class names applied to the underlying `<button>` element. Use this to apply Tailwind utility classes or any custom styles from the consuming app.
+</ParamField>
+
+<ParamField body="appName" type="string" required>
+  The name of the application consuming the component. This value is interpolated into the alert message: `Hello from your {appName} app!`
+</ParamField>
+
+## Usage
+
+```tsx
+import { Button } from '@karo-car/ui';
+
+export default function Page() {
+  return <Button appName="Admin">Click me</Button>;
+}
+```
+
+## Source code
+
+```tsx
+"use client";
+
+import { ReactNode } from "react";
+
+interface ButtonProps {
+  children: ReactNode;
+  className?: string;
+  appName: string;
+}
+
+export const Button = ({ children, className, appName }: ButtonProps) => {
+  return (
+    <button
+      className={className}
+      onClick={() => alert(`Hello from your ${appName} app!`)}
+    >
+      {children}
+    </button>
+  );
+};
+```
+
+<Note>
+  `Button` is decorated with the `"use client"` directive because its `onClick` handler calls the browser-only `alert` API. It cannot be rendered as a React Server Component — ensure any page or layout that includes it is itself a client component, or wrap it in a dedicated client boundary.
+</Note>
+
+<Tip>
+  The `Button` component is used in both the **admin** and **vendor** apps. When adding it to a new app, pass a descriptive `appName` string (e.g. `"Vendor"`, `"Corporate"`) so alert messages remain identifiable during local development.
+</Tip>

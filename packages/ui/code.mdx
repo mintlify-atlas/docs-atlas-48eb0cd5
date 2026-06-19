@@ -1,0 +1,60 @@
+---
+title: "Code Component — @karo-car/ui"
+sidebarTitle: "Code"
+description: "Minimal semantic wrapper around the HTML code element exported from @karo-car/ui, accepting an optional className for Tailwind CSS styling."
+---
+
+The `Code` component is a minimal wrapper around the HTML `<code>` element. It renders its children inside a semantic `<code>` tag, accepting an optional `className` for styling via Tailwind CSS or any other utility-class system used by the consuming app. Because it is purely structural with no client-side behaviour, it works as both a Server Component and a Client Component without modification.
+
+## Prop types
+
+```typescript
+{
+  children: React.ReactNode;
+  className?: string;
+}
+```
+
+## Props
+
+<ParamField body="children" type="React.ReactNode" required>
+  The code content to display inside the `<code>` element — typically a string representing a command, identifier, or short snippet.
+</ParamField>
+
+<ParamField body="className" type="string">
+  CSS class names applied to the `<code>` element. Commonly used to set a monospace font (`font-mono`), adjust text size (`text-sm`), or apply a highlight colour.
+</ParamField>
+
+## Usage
+
+```tsx
+import { Code } from '@karo-car/ui';
+
+export default function Page() {
+  return (
+    <p>
+      Run <Code className="font-mono text-sm">pnpm dev</Code> to start.
+    </p>
+  );
+}
+```
+
+## Source code
+
+```tsx
+import { type JSX } from "react";
+
+export function Code({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}): JSX.Element {
+  return <code className={className}>{children}</code>;
+}
+```
+
+<Tip>
+  `Code` intentionally has no built-in styles — all visual treatment is delegated to the `className` prop. Pair it with Tailwind classes such as `font-mono`, `text-sm`, `bg-gray-100`, and `rounded` in the consuming app to match your design system.
+</Tip>

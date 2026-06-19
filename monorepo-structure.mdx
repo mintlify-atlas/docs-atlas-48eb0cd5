@@ -1,0 +1,264 @@
+---
+title: "KaroCar Monorepo: Directory Structure and Workspace Layout"
+sidebarTitle: "Structure"
+description: "Explore KaroCar Platform's directory layout, pnpm workspace globs, Turborepo task graph, and root scripts that tie the whole monorepo together."
+---
+
+KaroCar Platform uses [Turborepo](https://turbo.build/repo) as its build-system orchestrator and [pnpm workspaces](https://pnpm.io/workspaces) as its package manager, combining them to deliver fast, incremental task execution across a single repository that houses six Next.js applications and three shared packages. Turborepo's content-addressed cache and task-graph engine ensure that packages are always built before the apps that depend on them, and that no work is ever repeated unnecessarily — whether you're running locally or in CI.
+
+## Directory Layout
+
+The repository follows the standard Turborepo convention of separating deployable applications (`apps/`) from internal shared libraries (`packages/`):
+
+```text
+KaroCar-platform/
+├── apps/
+│   ├── admin/        # Admin dashboard (Next.js)
+│   ├── auth/         # Auth service (Next.js)
+│   ├── corporate/    # Corporate portal (Next.js)
+│   ├── customer/     # Customer portal (Next.js)
+│   ├── vendor/       # Vendor dashboard (Next.js)
+│   └── web/          # Public website (Next.js)
+├── packages/
+│   ├── eslint-config/     # Shared ESLint configuration
+│   ├── typescript-config/ # Shared tsconfig presets
+│   └── ui/                # @karo-car/ui component library
+├── package.json           # Root manifest — scripts & devDependencies
+├── pnpm-workspace.yaml    # Workspace glob declarations
+└── turbo.json             # Turborepo task definitions
+```
+
+<Note>
+  Each directory under `apps/` is a fully self-contained Next.js project with
+  its own `package.json`, `next.config` file, and `app/` router. They are
+  independently deployable while sharing tooling and UI components from
+  `packages/`.
+</Note>
+
+## pnpm Workspace Configuration
+
+The `pnpm-workspace.yaml` file at the repo root is the single source of truth
+for which directories pnpm treats as workspace members:
+
+```yaml
+packages:
+  - "apps/*"
+  - "packages/*"
+```
+
+The two glob patterns tell pnpm to include **every direct sub-directory** of
+`apps/` and `packages/` as a workspace package. When you run `pnpm install`
+from the repo root, pnpm:
+
+1. Resolves external npm dependencies for all matched packages in a single
+   lockfile (`pnpm-lock.yaml`).
+2. Creates symlinks in each package's `node_modules` for any **internal**
+   workspace dependencies (e.g., an app that lists `"@karo-car/ui": "workspace:*"`
+   in its `package.json` gets a direct symlink to `packages/ui/`).
+3. Hard-links identical package tarballs across workspaces to minimise disk
+   usage via the global pnpm store.
+
+<Tip>
+  The `workspace:*` protocol in a package's `dependencies` means "use the
+  local workspace version of this package, whatever its current version is."
+  This is how all six apps reference `@karo-car/ui` without ever publishing
+  the library to npm.
+</Tip>
+
+## Turborepo Task Definitions
+
+`turbo.json` defines the tasks that Turborepo understands and how they relate
+to each other:
+
+```json
+{
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".next/**"]
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {},
+    "test": {}
+  }
+}
+```
+
+### Task-by-Task Breakdown
+
+| Task | `dependsOn` | `cache` | `outputs` | Behaviour |
+|------|-------------|---------|-----------|-----------|
+| `build` | `["^build"]` | `true` (default) | `.next/**` | Builds packages before apps; caches `.next/` output |
+| `dev` | — | `false` | — | Starts all dev servers in parallel; never cached |
+| `lint` | — | `true` (default) | — | Runs ESLint in each package independently |
+| `test` | — | `true` (default) | — | Runs tests in each package independently |
+
+### Understanding `dependsOn: ["^build"]`
+
+The caret (`^`) prefix is Turborepo's syntax for **topological dependency** —
+it means "run the `build` task in every workspace package that _this_ package
+depends on before running `build` here."
+
+In practice, when you run `pnpm build` from the repo root:
+
+1. Turborepo inspects the `dependencies` field of each app's `package.json`.
+2. It discovers that apps depend on `@karo-car/ui`, `@karo-car/eslint-config`,
+   and `@karo-car/typescript-config`.
+3. It schedules `build` for the three `packages/` entries **first**.
+4. Only once all package builds succeed does it start building the six apps,
+   running them in parallel where no further dependencies exist.
+
+```
+packages/typescript-config (build) ─┐
+packages/eslint-config     (build) ─┤──► apps/* (build, in parallel)
+packages/ui                (build) ─┘
+```
+
+### Why `dev` Has `cache: false`
+
+The `dev` task starts long-running Next.js development servers. Caching a
+persistent process makes no sense — Turborepo would never be able to restore
+a running server from cache. Setting `cache: false` tells Turborepo to always
+execute `dev` fresh and to never attempt to cache its output, even if inputs
+haven't changed.
+
+## Root `package.json` Scripts
+
+The root `package.json` exposes five scripts that act as the primary entry
+points for all day-to-day operations:
+
+```json
+{
+  "scripts": {
+    "build":       "turbo run build",
+    "dev":         "turbo run dev",
+    "lint":        "turbo run lint",
+    "format":      "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types"
+  }
+}
+```
+
+| Script | What it does |
+|--------|-------------|
+| `pnpm build` | Runs `turbo run build` — compiles packages then all six apps |
+| `pnpm dev` | Runs `turbo run dev` — starts all development servers concurrently |
+| `pnpm lint` | Runs `turbo run lint` — lints every workspace with shared ESLint config |
+| `pnpm format` | Runs Prettier directly over all `.ts`, `.tsx`, and `.md` files |
+| `pnpm check-types` | Runs `turbo run check-types` — type-checks every workspace with `tsc --noEmit` |
+
+<Note>
+  `format` is the only root script that does **not** go through Turborepo — it
+  runs Prettier directly from the root. This is intentional: formatting is a
+  side-effectful write operation that doesn't benefit from Turborepo's
+  task-graph model.
+</Note>
+
+## Shared Packages
+
+### `packages/ui` — `@karo-car/ui`
+
+The first-party React component library shared by all six apps. Components are
+written in TypeScript, styled with Tailwind CSS v4, and exported from a single
+package entry point. See [UI Overview](/packages/ui/overview) for the full
+component catalogue.
+
+### `packages/eslint-config`
+
+Exports named ESLint configurations (e.g., `next`, `react-internal`) that each
+app extends from its own `eslint.config.mjs`. Centralising rules here means a
+lint rule change in one place immediately applies everywhere. See
+[ESLint Config](/packages/eslint-config) for details.
+
+### `packages/typescript-config`
+
+Exports a set of `tsconfig.json` base files (`base.json`, `nextjs.json`,
+`react-library.json`) that each workspace `tsconfig.json` extends. All presets
+enable strict mode. See [TypeScript Config](/packages/typescript-config) for
+details.
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="Why Turborepo?">
+    Turborepo solves two hard problems that every monorepo eventually faces:
+    **task ordering** and **incremental execution**. Without it, you'd need
+    custom shell scripts to ensure packages build before apps, and every `CI`
+    run would rebuild the world from scratch. Turborepo's task graph handles
+    ordering automatically via `dependsOn`, and its content-addressed cache
+    (keyed on file hashes and environment variables) ensures that a task whose
+    inputs haven't changed is never re-executed — its cached output is restored
+    in milliseconds instead. For a team working across six apps, this compounds
+    into hours of saved CI time per week.
+  </Accordion>
+
+  <Accordion title="Can I add a new app?">
+    Yes. Create a new Next.js project inside `apps/`:
+
+    ```bash
+    cd apps
+    pnpm create next-app my-new-app
+    ```
+
+    Because `pnpm-workspace.yaml` uses the glob `apps/*`, pnpm automatically
+    picks up the new directory as a workspace member on the next `pnpm install`.
+    Turborepo will also include it in `turbo run build` and `turbo run dev`
+    automatically — no changes to `turbo.json` are required unless the new app
+    needs custom task configuration.
+
+    To use the shared UI library, add it to the new app's `package.json`:
+
+    ```json
+    {
+      "dependencies": {
+        "@karo-car/ui": "workspace:*"
+      }
+    }
+    ```
+
+    Then run `pnpm install` from the repo root to create the workspace symlink.
+  </Accordion>
+
+  <Accordion title="How do packages depend on each other?">
+    Internal workspace dependencies are declared in a package's `package.json`
+    using the `workspace:*` protocol, just like any npm dependency:
+
+    ```json
+    {
+      "dependencies": {
+        "@karo-car/ui": "workspace:*"
+      },
+      "devDependencies": {
+        "@karo-car/eslint-config": "workspace:*",
+        "@karo-car/typescript-config": "workspace:*"
+      }
+    }
+    ```
+
+    pnpm resolves these to symlinks pointing at the actual source directories,
+    so TypeScript gets live types and Hot Module Replacement works without any
+    build step for the shared packages during development. Turborepo still
+    respects the dependency graph for `build` tasks (via `dependsOn: ["^build"]`),
+    ensuring packages are compiled before apps in production builds.
+  </Accordion>
+</AccordionGroup>
+
+## Further Reading
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Run all six apps locally with a single command.
+  </Card>
+  <Card title="UI Component Library" icon="layer-group" href="/packages/ui/overview">
+    Browse the shared `@karo-car/ui` component catalogue.
+  </Card>
+  <Card title="ESLint Config" icon="shield-halved" href="/packages/eslint-config">
+    Understand the shared linting rules used across every app.
+  </Card>
+  <Card title="Remote Caching" icon="cloud" href="/development/remote-caching">
+    Share Turborepo's build cache with your team and CI pipelines via Vercel.
+  </Card>
+</CardGroup>

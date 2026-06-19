@@ -1,0 +1,153 @@
+---
+title: "KaroCar Vendor Dashboard Application"
+sidebarTitle: "Vendor"
+description: "The dashboard for KaroCar service providers, enabling vendors to manage vehicle listings, availability, and orders using Next.js 16 and the shared @karo-car/ui library."
+---
+
+The `vendor` app is the operational dashboard for car service providers and vendors on the KaroCar Platform. It gives vendors the tools to manage their vehicle listings, set availability windows, track incoming orders, and update pricing — all within a dedicated Next.js application. Like the `admin` app, the vendor dashboard consumes the shared `@karo-car/ui` component library, ensuring UI consistency across internal-facing surfaces. The homepage (`app/page.tsx`) renders the **Vendor Dashboard** heading as the authenticated landing page for service providers.
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components for dashboard-grade performance and nested route layouts.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    Latest stable React with concurrent features for responsive, data-heavy vendor management UIs.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first CSS with v4 PostCSS engine, dark-mode support, and consistent tokens across the monorepo.
+  </Card>
+  <Card title="@karo-car/ui" icon="puzzle">
+    Shared internal component library providing reusable `Button`, `Card`, and other building-block components.
+  </Card>
+</CardGroup>
+
+## Shared UI Components
+
+The `vendor` app declares `@karo-car/ui` as a runtime dependency using the `workspace:*` protocol, resolving directly to `packages/ui` in the monorepo. This is the same package used by the `admin` app, ensuring visual and behavioural consistency between the two internal dashboards.
+
+```typescript
+import { Button } from "@karo-car/ui";
+```
+
+Any changes made to `packages/ui` are immediately available in the vendor app without a separate publish step. See [UI Package Overview](/packages/ui/overview) for the full component catalogue.
+
+## Directory Structure
+
+```
+apps/vendor/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Vendor Dashboard homepage
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+## Package Configuration
+
+```json
+{
+  "name": "vendor",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "@karo-car/ui": "workspace:*"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
+## Development Commands
+
+<CodeGroup>
+
+```bash Turbo filtered
+turbo dev --filter=vendor
+```
+
+```bash pnpm filter
+pnpm --filter vendor dev
+```
+
+```bash Global (all apps)
+pnpm dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `turbo dev --filter=vendor` to run only the vendor dashboard. Turborepo
+  automatically watches `packages/ui` for changes and triggers hot-reloads in
+  the vendor app — no manual re-linking or extra terminal windows required.
+</Tip>
+
+Next.js starts on **port 3000** by default. When running multiple apps in parallel, each is assigned the next available port. Check the terminal output for the exact URL.
+
+## Building & Starting
+
+<CodeGroup>
+
+```bash Turbo
+turbo build --filter=vendor && turbo start --filter=vendor
+```
+
+```bash pnpm
+pnpm --filter vendor build && pnpm --filter vendor start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    Run `pnpm install` from the monorepo root. The `workspace:*` protocol symlinks `@karo-car/ui` automatically.
+  </Step>
+  <Step title="Build @karo-car/ui (if needed)">
+    If running builds independently, run `turbo build --filter=@karo-car/ui` first. When using the standard Turborepo pipeline, this is handled automatically via the dependency graph.
+  </Step>
+  <Step title="Build the vendor app">
+    Run `turbo build --filter=vendor`. Turborepo caches the output for fast incremental rebuilds.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=vendor` and navigate to the printed URL to verify the Vendor Dashboard loads correctly.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter vendor lint
+```
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="UI Package Overview" icon="puzzle" href="/packages/ui/overview">
+    Explore the shared @karo-car/ui component library used by this app.
+  </Card>
+  <Card title="Button Component" icon="cursor-click" href="/packages/ui/button">
+    API reference for the shared Button component.
+  </Card>
+  <Card title="Admin App" icon="shield" href="/apps/admin">
+    The internal operator dashboard that also consumes @karo-car/ui.
+  </Card>
+  <Card title="Customer App" icon="user" href="/apps/customer">
+    The customer-facing portal that interacts with vendor listings.
+  </Card>
+</CardGroup>

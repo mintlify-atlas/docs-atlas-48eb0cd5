@@ -1,0 +1,182 @@
+---
+title: "KaroCar Corporate Portal Application"
+sidebarTitle: "Corporate"
+description: "The enterprise portal for business accounts and fleet operators on KaroCar, offering organisation-level management of services, users, and reporting."
+---
+
+The `corporate` app is the enterprise-grade portal for business accounts and fleet operators on the KaroCar Platform. It provides organisations with the tools to manage multi-user accounts, oversee fleet bookings, access consolidated reporting, and configure company-wide preferences for KaroCar services. The homepage (`app/page.tsx`) renders a **Vendor Dashboard** heading — the corporate portal intentionally reuses the vendor-style layout as a structural foundation for its enterprise management views.
+
+<Info>
+  The `corporate` app's `page.tsx` currently renders a **"Vendor Dashboard"**
+  heading. This is intentional — the corporate portal reuses the same
+  vendor-style layout pattern as a starting scaffold for its enterprise
+  management interface. The heading and copy are expected to be updated as
+  corporate-specific features are built out on top of this foundation.
+</Info>
+
+## Tech Stack
+
+<CardGroup cols={2}>
+  <Card title="Next.js 16.2.7" icon="n">
+    App Router with server components for enterprise-scale data rendering and nested route organisation.
+  </Card>
+  <Card title="React 19.2.4" icon="react">
+    Latest stable React for interactive, data-rich corporate management dashboards.
+  </Card>
+  <Card title="Tailwind CSS v4" icon="palette">
+    Utility-first CSS with the v4 PostCSS engine, ensuring consistent styling with the broader platform.
+  </Card>
+  <Card title="TypeScript 5" icon="code">
+    Strict typing across fleet models, organisation structures, and API integrations.
+  </Card>
+</CardGroup>
+
+## Directory Structure
+
+```
+apps/corporate/
+├── app/
+│   ├── layout.tsx    # Root layout with Geist font
+│   ├── page.tsx      # Corporate portal homepage (vendor-style layout)
+│   └── globals.css   # Global styles
+├── public/           # Static assets
+├── package.json
+├── next.config.ts
+└── tsconfig.json
+```
+
+Additional routes for fleet management, billing, user administration, and organisation settings are expected to be added under `app/` following Next.js App Router conventions.
+
+## Package Configuration
+
+The `corporate` app does not depend on any internal workspace UI packages. Its component set is built locally within the app, keeping it independently deployable.
+
+```json
+{
+  "name": "corporate",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "next": "16.2.7",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
+```
+
+## Development Commands
+
+<CodeGroup>
+
+```bash Turbo filtered
+turbo dev --filter=corporate
+```
+
+```bash pnpm filter
+pnpm --filter corporate dev
+```
+
+```bash Global (all apps)
+pnpm dev
+```
+
+</CodeGroup>
+
+<Tip>
+  Use `turbo dev --filter=corporate` to run only the corporate portal. Because
+  this app has no upstream workspace package dependencies, it starts up
+  immediately — ideal when building out enterprise features or refining the
+  organisation management UX in isolation.
+</Tip>
+
+Next.js starts on **port 3000** by default. When multiple apps in the monorepo are running simultaneously, each is assigned the next available port. Check your terminal output for the exact URL.
+
+## Building & Starting
+
+<CodeGroup>
+
+```bash Turbo
+turbo build --filter=corporate && turbo start --filter=corporate
+```
+
+```bash pnpm
+pnpm --filter corporate build && pnpm --filter corporate start
+```
+
+</CodeGroup>
+
+<Steps>
+  <Step title="Install dependencies">
+    Run `pnpm install` from the monorepo root. All workspace packages and local node_modules will be linked automatically.
+  </Step>
+  <Step title="Build the corporate app">
+    Run `turbo build --filter=corporate`. Turborepo caches the build output so subsequent runs only recompile changed modules.
+  </Step>
+  <Step title="Start the production server">
+    Run `turbo start --filter=corporate` and open the printed URL to verify the corporate portal renders correctly.
+  </Step>
+</Steps>
+
+## Linting
+
+```bash
+pnpm --filter corporate lint
+```
+
+## Customising the Layout
+
+The corporate portal currently inherits the vendor-style page scaffold. To differentiate it:
+
+<Accordion title="Updating the homepage heading">
+  Edit `apps/corporate/app/page.tsx` and replace the `<h1>` content:
+
+  ```typescript
+  <h1 className="...">
+    Corporate Portal
+  </h1>
+  ```
+
+  Update the accompanying paragraph to reflect enterprise-specific messaging for fleet operators and business account managers.
+</Accordion>
+
+<Accordion title="Adding organisation routes">
+  Create new route segments under `apps/corporate/app/` following App Router conventions:
+
+  ```
+  apps/corporate/app/
+  ├── fleet/
+  │   └── page.tsx      # Fleet management
+  ├── billing/
+  │   └── page.tsx      # Corporate billing
+  └── users/
+      └── page.tsx      # Organisation user management
+  ```
+</Accordion>
+
+## Related Pages
+
+<CardGroup cols={2}>
+  <Card title="Vendor App" icon="store" href="/apps/vendor">
+    The vendor dashboard whose layout pattern the corporate portal is based on.
+  </Card>
+  <Card title="Auth App" icon="lock" href="/apps/auth">
+    The centralised authentication service for corporate user sign-in.
+  </Card>
+  <Card title="Admin App" icon="shield" href="/apps/admin">
+    Internal operator dashboard for platform-wide management.
+  </Card>
+  <Card title="Local Setup" icon="laptop" href="/development/local-setup">
+    Step-by-step guide to running the full platform stack locally.
+  </Card>
+</CardGroup>
